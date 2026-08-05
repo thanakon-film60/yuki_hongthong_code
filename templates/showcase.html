@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คอลเลกชันการ์ดของ Thanakron · Yuki CardVault</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0f172a;--panel:#1e293b;--panel2:#273449;--line:#334155;--text:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#818cf8}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Kanit',sans-serif;background:linear-gradient(160deg,#0f172a,#111827);color:var(--text);min-height:100vh}
+  header{padding:36px 20px 10px;text-align:center}
+  header h1{font-size:2rem;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{color:var(--muted);font-weight:300;margin-top:6px}
+  .wrap{max-width:1150px;margin:0 auto;padding:0 20px 60px}
+  .statbar{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin:22px 0}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 22px;text-align:center;min-width:120px}
+  .stat .n{font-size:1.5rem;font-weight:700;color:var(--accent)}
+  .stat .l{font-size:.78rem;color:var(--muted)}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:20px}
+  .toolbar input,.toolbar select{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-family:inherit;font-size:.9rem}
+  .toolbar input{min-width:240px}
+  .toolbar input:focus,.toolbar select:focus{outline:none;border-color:var(--accent)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s}
+  .card:hover{transform:translateY(-4px);border-color:var(--accent)}
+  .imgbox{background:var(--panel2);aspect-ratio:.72;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .imgbox img{width:100%;height:100%;object-fit:contain}
+  .imgbox .noimg{color:var(--muted);font-size:.8rem}
+  .body{padding:12px 14px 16px}
+  .nm{font-weight:600;line-height:1.25}
+  .sub{color:var(--muted);font-size:.78rem;margin:2px 0 8px}
+  .tier{display:inline-block;padding:3px 9px;border-radius:999px;font-size:.7rem;font-weight:600;color:#0f172a}
+  .price{margin-top:8px;font-size:.85rem;color:var(--muted)}
+  .price b{color:var(--text);font-size:1.05rem}
+  .eff{margin-top:8px;font-size:.8rem;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .eff b{color:var(--accent)}
+  .more{color:var(--accent);font-size:.75rem;margin-top:6px;display:inline-block}
+  .edition{margin-top:7px;font-size:.75rem;color:#fbbf24;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:3px 8px;display:inline-block}
+  .empty{text-align:center;color:var(--muted);padding:60px 0}
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .modal.open{display:flex}
+  .mbox{background:var(--panel);border:1px solid var(--line);border-radius:18px;max-width:800px;width:100%;max-height:90vh;overflow:auto}
+  .mhead{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+  .mhead h2{font-size:1.3rem}
+  .mhead button{background:none;border:none;color:var(--muted);font-size:1.7rem;cursor:pointer}
+  .mbody{padding:22px;display:grid;grid-template-columns:270px 1fr;gap:24px}
+  .mbody img{width:100%;border-radius:12px}
+  .drow{margin-bottom:8px;font-size:.9rem;color:var(--muted)}
+  .drow b{color:var(--text)}
+  .effbox{margin-top:14px;padding:14px;background:var(--panel2);border-radius:10px}
+  table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.85rem}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+  th{background:var(--panel2)}
+  footer{text-align:center;color:#475569;font-size:.78rem;padding:20px}
+  @media(max-width:560px){.mbody{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>คอลเลกชันการ์ดของ Thanakron</h1>
+  <p>สมบัติการ์ด Yu-Gi-Oh! สะสม — คลิกที่การ์ดเพื่อดูรายละเอียดเต็ม</p>
+</header>
+
+<div class="wrap">
+  <div class="statbar" id="statbar"></div>
+  <div class="toolbar">
+    <input id="q" placeholder="🔍 ค้นหาชื่อ / เอฟเฟกต์...">
+    <select id="sort">
+      <option value="price_desc">ราคา: มาก → น้อย</option>
+      <option value="price_asc">ราคา: น้อย → มาก</option>
+      <option value="name">ชื่อ (ก-ฮ)</option>
+    </select>
+  </div>
+  <div id="grid"></div>
+</div>
+<footer>Yuki CardVault · หน้าแสดงคอลเลกชัน (ดูอย่างเดียว)</footer>
+
+<div class="modal" id="modal">
+  <div class="mbox">
+    <div class="mhead"><h2 id="mTitle"></h2><button id="mClose">&times;</button></div>
+    <div class="mbody" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const fmt=n=>n==null?'—':Number(n).toLocaleString('th-TH',{maximumFractionDigits:2});
+const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let CARDS=[];
+
+async function load(){
+  const s=await (await fetch('/api/stats')).json();
+  $('#statbar').innerHTML=`
+    <div class="stat"><div class="n">${s.total_cards}</div><div class="l">การ์ดทั้งหมด</div></div>
+    <div class="stat"><div class="n">${fmt(s.total_value_thb)} ฿</div><div class="l">มูลค่ารวม</div></div>
+    <div class="stat"><div class="n">${fmt(s.avg_value_thb)} ฿</div><div class="l">เฉลี่ย/ใบ</div></div>`;
+  const d=await (await fetch('/api/cards')).json();
+  CARDS=d.cards; render();
+}
+function render(){
+  let list=[...CARDS];
+  const q=$('#q').value.trim().toLowerCase();
+  if(q) list=list.filter(c=>(c.name_full+' '+(c.name_short||'')+' '+(c.effect||'')).toLowerCase().includes(q));
+  const sort=$('#sort').value;
+  list.sort((a,b)=>{
+    const pa=a.price_summary.avg??-1, pb=b.price_summary.avg??-1;
+    if(sort==='price_asc')return pa-pb;
+    if(sort==='name')return a.name_full.localeCompare(b.name_full,'th');
+    return pb-pa;
+  });
+  if(!list.length){$('#grid').innerHTML='<div class="empty">ไม่พบการ์ด</div>';return;}
+  $('#grid').innerHTML='<div class="grid">'+list.map(cardHTML).join('')+'</div>';
+  document.querySelectorAll('.card').forEach(el=>el.onclick=()=>openModal(el.dataset.id));
+}
+function cardHTML(c){
+  const v=c.value,ps=c.price_summary;
+  return `<div class="card" data-id="${c.id}">
+    <div class="imgbox">${c.image_url?`<img loading="lazy" src="${c.image_url}">`:'<span class="noimg">ไม่มีรูป</span>'}</div>
+    <div class="body">
+      <div class="nm">${esc(c.name_full)}</div>
+      <div class="sub">${esc(c.name_short||'')} ${c.rarity?'· '+esc(c.rarity):''}</div>
+      <span class="tier" style="background:${v.color}">${v.tier}</span>
+      ${c.edition?`<div class="edition">🏷️ ${esc(c.edition)}</div>`:''}
+      <div class="price">${ps.avg!=null?`<b>${fmt(ps.avg)} ฿</b>`:'—'}</div>
+      ${c.effect?`<div class="eff"><b>⚡ เอฟเฟกต์:</b> ${esc(c.effect)}</div><span class="more">คลิกดูเต็ม →</span>`:''}
+    </div></div>`;
+}
+function openModal(id){
+  const c=CARDS.find(x=>x.id===id); if(!c)return;
+  $('#mTitle').textContent=c.name_full;
+  const ps=c.price_summary;
+  let priceTable='';
+  if(c.prices&&c.prices.length){
+    priceTable='<table><tr><th>แหล่ง</th><th>ราคา</th></tr>'+
+      c.prices.map(p=>`<tr><td>${esc(p.source||'—')}</td><td>${fmt(p.price)} ฿</td></tr>`).join('')+'</table>';
+  }
+  $('#mBody').innerHTML=`
+    <div>${c.image_url?`<img src="${c.image_url}">`:'<div class="empty">ไม่มีรูป</div>'}</div>
+    <div>
+      <span class="tier" style="background:${c.value.color}">${c.value.tier}</span>
+      <div class="drow" style="font-size:1.4rem;color:var(--text);font-weight:700;margin:10px 0">${fmt(ps.avg)} ฿</div>
+      ${c.name_short?`<div class="drow">ชื่อต้นฉบับ: <b>${esc(c.name_short)}</b></div>`:''}
+      ${c.edition?`<div class="drow">ประเภท/รุ่น: <b style="color:#fbbf24">🏷️ ${esc(c.edition)}</b></div>`:''}
+      <div class="drow">หมวด: <b>${esc(c.category||'—')}</b> · ความหายาก: <b>${esc(c.rarity||'—')}</b></div>
+      <div class="drow">ขนาด: <b>${c.size.label}</b>${c.size.area_cm2?` (${c.size.width_cm}×${c.size.height_cm} ซม.)`:''}</div>
+      ${ps.sources>1?`<div class="drow">ช่วงราคา: <b>${fmt(ps.min)}–${fmt(ps.max)} ฿</b> (${ps.sources} แหล่ง)</div>`:''}
+      ${c.effect?`<div class="effbox"><b>⚡ เอฟเฟกต์ / รายละเอียด</b><div style="color:var(--muted);margin-top:5px">${esc(c.effect)}</div></div>`:''}
+      ${priceTable}
+    </div>`;
+  $('#modal').classList.add('open');
+}
+$('#mClose').onclick=()=>$('#modal').classList.remove('open');
+$('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').classList.remove('open')};
+$('#q').oninput=render; $('#sort').onchange=render;
+load();
+</script>
+</body>
+</html>

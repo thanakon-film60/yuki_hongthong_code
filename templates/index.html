@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yuki CardVault · คลังการ์ด + สแกนระบุการ์ด</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0f172a;--panel:#1e293b;--panel2:#273449;--line:#334155;--text:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#818cf8}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Kanit',sans-serif;background:linear-gradient(160deg,#0f172a,#111827);color:var(--text);min-height:100vh}
+  header{padding:28px 20px 8px;text-align:center}
+  header h1{font-size:1.9rem;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{color:var(--muted);font-weight:300;margin-top:4px}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 20px 60px}
+  .tabs{display:flex;gap:8px;justify-content:center;margin:22px 0}
+  .tabs button{padding:10px 22px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:10px;font-family:inherit;font-size:.95rem;cursor:pointer}
+  .tabs button.active{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#0f172a;font-weight:600;border-color:transparent}
+  .view{display:none}.view.active{display:block}
+  .statbar{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin-bottom:20px;color:var(--muted);font-size:.9rem}
+  .statbar b{color:var(--text)}
+  /* form */
+  .formcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;max-width:640px;margin:0 auto 26px}
+  .formcard h3{margin-bottom:14px;font-weight:600}
+  .row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .field{flex:1;min-width:150px}
+  .field label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:5px}
+  .field input,.field textarea,.field select{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-family:inherit;font-size:.9rem}
+  .field textarea{resize:vertical;min-height:70px}
+  .prices-box{border:1px dashed var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+  .price-row{display:flex;gap:8px;margin-bottom:8px}
+  .price-row input{flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-family:inherit}
+  .price-row button{border:none;background:#7f1d1d;color:#fff;border-radius:8px;padding:0 12px;cursor:pointer}
+  .btn{padding:11px 20px;border:none;border-radius:10px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#0f172a;font-weight:600;font-family:inherit;cursor:pointer;font-size:.95rem}
+  .btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+  .btn.sm{padding:7px 14px;font-size:.85rem}
+  /* grid */
+  .searchbar{max-width:420px;margin:0 auto 18px}
+  .searchbar input{width:100%;padding:11px 16px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-family:inherit}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .card .imgbox{background:var(--panel2);aspect-ratio:.72;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .card .imgbox img{width:100%;height:100%;object-fit:contain}
+  .card .imgbox .noimg{color:var(--muted);font-size:.8rem}
+  .card .body{padding:12px 14px}
+  .card .nm{font-weight:600;line-height:1.25}
+  .card .sub{color:var(--muted);font-size:.78rem;margin:2px 0 8px}
+  .tier{display:inline-block;padding:3px 9px;border-radius:999px;font-size:.7rem;font-weight:600;color:#0f172a}
+  .eff{color:var(--muted);font-size:.82rem;margin-top:8px;max-height:60px;overflow:hidden}
+  .card .acts{display:flex;gap:6px;margin-top:10px}
+  .price{margin-top:8px;font-size:.85rem;color:var(--muted)}
+  .price b{color:var(--text);font-size:1.05rem}
+  .empty{text-align:center;color:var(--muted);padding:40px 0}
+  /* scan */
+  .drop{max-width:520px;margin:0 auto;border:2px dashed var(--line);border-radius:16px;padding:34px;text-align:center;background:var(--panel);cursor:pointer}
+  .drop.drag{border-color:var(--accent);background:var(--panel2)}
+  .drop input{display:none}
+  #scanResult{max-width:640px;margin:22px auto 0}
+  .matchbox{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;display:grid;grid-template-columns:180px 1fr;gap:20px}
+  .matchbox img{width:100%;border-radius:10px}
+  .conf{font-size:.85rem;color:var(--muted);margin-bottom:8px}
+  .conf .bar{height:8px;background:var(--panel2);border-radius:4px;overflow:hidden;margin-top:4px}
+  .conf .bar span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  .spinner{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:20px auto}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media(max-width:560px){.matchbox{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Yuki CardVault</h1>
+  <p>คลังการ์ดสะสมส่วนตัว · สแกนรูปเพื่อระบุชื่อเต็มและสรุปเอฟเฟกต์</p>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <button data-tab="vault" class="active">📚 คลังการ์ด</button>
+    <button data-tab="add">➕ เพิ่มการ์ด</button>
+    <button data-tab="scan">🔍 สแกนระบุการ์ด</button>
+  </div>
+
+  <!-- คลังการ์ด -->
+  <div class="view active" id="view-vault">
+    <div class="statbar" id="statbar"></div>
+    <div class="searchbar"><input id="q" placeholder="ค้นหาชื่อ / เอฟเฟกต์..."></div>
+    <div id="vaultGrid"></div>
+  </div>
+
+  <!-- เพิ่ม/แก้ไขการ์ด -->
+  <div class="view" id="view-add">
+    <form class="formcard" id="cardForm">
+      <h3 id="formTitle">เพิ่มการ์ดใหม่</h3>
+      <input type="hidden" id="editId">
+      <div class="row">
+        <div class="field"><label>ชื่อเต็ม (ไทย) *</label><input id="name_full" required placeholder="เช่น อัศวินเพลิงนิรันดร์"></div>
+        <div class="field"><label>ชื่อย่อ/ชื่อเล่น</label><input id="name_short" placeholder="เช่น อัศวินเพลิง"></div>
+      </div>
+      <div class="field" style="margin-bottom:12px"><label>เอฟเฟกต์ / รายละเอียด</label><textarea id="effect" placeholder="อธิบายความสามารถ เอฟเฟกต์ เงื่อนไข ฯลฯ"></textarea></div>
+      <div class="row">
+        <div class="field"><label>หมวด/ประเภท</label><input id="category" placeholder="เช่น มอนสเตอร์, เวทมนตร์"></div>
+        <div class="field"><label>ความหายาก</label><input id="rarity" placeholder="เช่น SR, UR, Secret"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>กว้าง (ซม.)</label><input id="width_cm" type="number" step="0.1" placeholder="6.3"></div>
+        <div class="field"><label>สูง (ซม.)</label><input id="height_cm" type="number" step="0.1" placeholder="8.8"></div>
+      </div>
+      <div class="prices-box">
+        <label style="font-size:.8rem;color:var(--muted)">ราคาจากหลายแหล่ง (ไว้เปรียบเทียบ)</label>
+        <div id="priceRows"></div>
+        <button type="button" class="btn ghost sm" id="addPrice">+ เพิ่มแหล่งราคา</button>
+      </div>
+      <div class="field" style="margin-bottom:14px"><label>รูปการ์ด (ใช้สำหรับสแกนระบุภายหลัง)</label><input id="image" type="file" accept="image/*"></div>
+      <button type="submit" class="btn">บันทึกการ์ด</button>
+      <button type="button" class="btn ghost" id="cancelEdit" style="display:none">ยกเลิก</button>
+    </form>
+  </div>
+
+  <!-- สแกน -->
+  <div class="view" id="view-scan">
+    <div class="drop" id="drop">
+      <input type="file" id="scanFile" accept="image/*">
+      <div style="font-size:2.4rem">📷</div>
+      <p style="margin-top:8px">คลิกหรือวางรูปการ์ดที่นี่เพื่อระบุ</p>
+      <p style="color:var(--muted);font-size:.82rem;margin-top:4px">ระบบจะเทียบกับการ์ดในคลังแล้วบอกชื่อเต็ม + เอฟเฟกต์</p>
+    </div>
+    <div id="scanResult"></div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const fmt = n => n==null ? '—' : Number(n).toLocaleString('th-TH',{maximumFractionDigits:2});
+const esc = s => (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// tabs
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); $('#view-'+b.dataset.tab).classList.add('active');
+  if(b.dataset.tab==='vault') loadVault();
+});
+
+// ---------- price rows ----------
+function addPriceRow(source='',price=''){
+  const div=document.createElement('div'); div.className='price-row';
+  div.innerHTML=`<input placeholder="แหล่ง (เช่น ตลาดนัด, Shopee)" value="${esc(source)}">
+    <input type="number" step="0.01" placeholder="ราคา (บาท)" value="${price}">
+    <button type="button">✕</button>`;
+  div.querySelector('button').onclick=()=>div.remove();
+  $('#priceRows').appendChild(div);
+}
+$('#addPrice').onclick=()=>addPriceRow();
+function collectPrices(){
+  return [...$('#priceRows').children].map(r=>{
+    const[s,p]=r.querySelectorAll('input');
+    return{source:s.value.trim(),price:parseFloat(p.value)||0};
+  }).filter(x=>x.source||x.price);
+}
+
+// ---------- create / update ----------
+$('#cardForm').onsubmit=async e=>{
+  e.preventDefault();
+  const fd=new FormData();
+  fd.append('name_full',$('#name_full').value);
+  fd.append('name_short',$('#name_short').value);
+  fd.append('effect',$('#effect').value);
+  fd.append('category',$('#category').value);
+  fd.append('rarity',$('#rarity').value);
+  fd.append('width_cm',$('#width_cm').value);
+  fd.append('height_cm',$('#height_cm').value);
+  fd.append('prices',JSON.stringify(collectPrices()));
+  if($('#image').files[0]) fd.append('image',$('#image').files[0]);
+  const id=$('#editId').value;
+  const url=id?('/api/cards/'+id):'/api/cards';
+  const method=id?'PUT':'POST';
+  const r=await fetch(url,{method,body:fd});
+  const d=await r.json();
+  if(!r.ok){alert(d.error||'บันทึกไม่สำเร็จ');return;}
+  resetForm();
+  document.querySelector('.tabs button[data-tab="vault"]').click();
+};
+function resetForm(){
+  $('#cardForm').reset(); $('#editId').value=''; $('#priceRows').innerHTML='';
+  $('#formTitle').textContent='เพิ่มการ์ดใหม่'; $('#cancelEdit').style.display='none';
+}
+$('#cancelEdit').onclick=()=>{resetForm();document.querySelector('.tabs button[data-tab="vault"]').click();};
+
+// ---------- vault ----------
+let CARDS={};
+async function loadVault(){
+  const s=await (await fetch('/api/stats')).json();
+  $('#statbar').innerHTML=`<div>การ์ดทั้งหมด: <b>${s.total_cards}</b></div>
+    <div>มีรูป: <b>${s.with_image}</b></div>
+    <div>มูลค่ารวม: <b>${fmt(s.total_value_thb)} ฿</b></div>
+    <div>เฉลี่ย/ใบ: <b>${fmt(s.avg_value_thb)} ฿</b></div>`;
+  const q=$('#q').value.trim();
+  const d=await (await fetch('/api/cards'+(q?('?q='+encodeURIComponent(q)):''))).json();
+  CARDS=Object.fromEntries(d.cards.map(c=>[c.id,c]));
+  if(!d.cards.length){$('#vaultGrid').innerHTML='<div class="empty">ยังไม่มีการ์ดในคลัง — ไปที่แท็บ "เพิ่มการ์ด"</div>';return;}
+  $('#vaultGrid').innerHTML='<div class="grid">'+d.cards.map(cardHTML).join('')+'</div>';
+  d.cards.forEach(c=>{
+    $('#edit-'+c.id).onclick=()=>editCard(c.id);
+    $('#del-'+c.id).onclick=()=>delCard(c.id);
+  });
+}
+function cardHTML(c){
+  const v=c.value,ps=c.price_summary;
+  return `<div class="card">
+    <div class="imgbox">${c.image_url?`<img src="${c.image_url}">`:'<span class="noimg">ไม่มีรูป</span>'}</div>
+    <div class="body">
+      <div class="nm">${esc(c.name_full)}</div>
+      <div class="sub">${esc(c.name_short||'')} ${c.rarity?'· '+esc(c.rarity):''}</div>
+      <span class="tier" style="background:${v.color}">${v.tier}</span>
+      <div class="price">${ps.avg!=null?`เฉลี่ย <b>${fmt(ps.avg)} ฿</b> (${ps.min}–${ps.max}, ${ps.sources} แหล่ง)`:'ยังไม่ระบุราคา'}</div>
+      <div class="sub">ขนาด: ${c.size.label}${c.size.area_cm2?` (${c.size.width_cm}×${c.size.height_cm})`:''}</div>
+      ${c.effect?`<div class="eff">⚡ ${esc(c.effect)}</div>`:''}
+      <div class="acts">
+        <button class="btn ghost sm" id="edit-${c.id}">แก้ไข</button>
+        <button class="btn sm" id="del-${c.id}" style="background:#7f1d1d;color:#fff">ลบ</button>
+      </div>
+    </div></div>`;
+}
+$('#q').oninput=()=>loadVault();
+
+function editCard(id){
+  const c=CARDS[id];
+  document.querySelector('.tabs button[data-tab="add"]').click();
+  $('#formTitle').textContent='แก้ไขการ์ด'; $('#editId').value=id; $('#cancelEdit').style.display='inline-block';
+  $('#name_full').value=c.name_full||''; $('#name_short').value=c.name_short||'';
+  $('#effect').value=c.effect||''; $('#category').value=c.category||''; $('#rarity').value=c.rarity||'';
+  $('#width_cm').value=c.size.width_cm||''; $('#height_cm').value=c.size.height_cm||'';
+  $('#priceRows').innerHTML=''; (c.prices||[]).forEach(p=>addPriceRow(p.source,p.price));
+}
+async function delCard(id){
+  if(!confirm('ลบการ์ดนี้?'))return;
+  await fetch('/api/cards/'+id,{method:'DELETE'}); loadVault();
+}
+
+// ---------- scan ----------
+const drop=$('#drop'),scanFile=$('#scanFile');
+drop.onclick=()=>scanFile.click();
+scanFile.onchange=()=>scanFile.files[0]&&doScan(scanFile.files[0]);
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag')}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag')}));
+drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)doScan(f)});
+
+async function doScan(file){
+  $('#scanResult').innerHTML='<div class="spinner"></div>';
+  const fd=new FormData(); fd.append('image',file);
+  const r=await fetch('/api/identify',{method:'POST',body:fd});
+  const d=await r.json();
+  if(!r.ok){$('#scanResult').innerHTML=`<div class="empty">❌ ${d.error}</div>`;return;}
+  const c=d.card,v=c.value;
+  const alt=(d.alternatives||[]).filter(a=>a).map(a=>`${esc(a.name_full)} (${a.confidence}%)`).join(', ');
+  $('#scanResult').innerHTML=`
+    <div class="matchbox">
+      <div>${c.image_url?`<img src="${c.image_url}">`:'<div class="empty">ไม่มีรูป</div>'}</div>
+      <div>
+        ${d.matched?'<span class="tier" style="background:#16a34a">✓ พบการ์ดที่ตรง</span>':'<span class="tier" style="background:#ca8a04">≈ ใกล้เคียงที่สุด</span>'}
+        <div class="conf" style="margin-top:10px">ความมั่นใจ: <b style="color:var(--text)">${d.confidence}%</b>
+          <div class="bar"><span style="width:${d.confidence}%"></span></div>
+        </div>
+        <h2 style="margin:6px 0">${esc(c.name_full)}</h2>
+        <div class="sub" style="color:var(--muted)">${esc(c.name_short||'')} ${c.rarity?'· '+esc(c.rarity):''} ${c.category?'· '+esc(c.category):''}</div>
+        <span class="tier" style="background:${v.color};margin-top:8px">${v.tier}</span>
+        ${c.price_summary.avg!=null?`<div class="price" style="margin-top:8px">ราคาเฉลี่ย <b>${fmt(c.price_summary.avg)} ฿</b></div>`:''}
+        <div class="sub" style="margin-top:8px">ขนาด: ${c.size.label}${c.size.area_cm2?` (${c.size.width_cm}×${c.size.height_cm} ซม.)`:''}</div>
+        ${c.effect?`<div style="margin-top:12px;padding:12px;background:var(--panel2);border-radius:10px">
+          <b>⚡ เอฟเฟกต์</b><div style="color:var(--muted);margin-top:4px">${esc(c.effect)}</div></div>`:''}
+        ${d.note?`<div class="sub" style="margin-top:10px;color:#ca8a04">${esc(d.note)}</div>`:''}
+        ${alt?`<div class="sub" style="margin-top:10px">อื่น ๆ ที่ใกล้เคียง: ${alt}</div>`:''}
+      </div>
+    </div>`;
+}
+
+loadVault();
+</script>
+</body>
+</html>
